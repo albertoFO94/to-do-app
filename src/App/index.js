@@ -11,6 +11,7 @@ import { TodosError } from '../TodosError';
 import { TodosLoading } from '../TodosLoading';
 import { EmptyTodos } from '../EmptyTodos';
 import { TodoHeader } from '../TodoHeader';
+import { ChangeAlert } from '../ChangeAlert';
 
 function App() {
   const {
@@ -25,27 +26,36 @@ function App() {
     completedTodos,
     searchValue,
     setSearchValue,
-    addTodo
+    addTodo,
+    synchronizeTodos
   } = useTodos();
 
   return (
     <React.Fragment>
-      <TodoHeader>
+      <TodoHeader loading={loading}>
         <TodoCounter 
           totalTodos={totalTodos}
           completedTodos={completedTodos}
         />
-        <TodoSearch 
+        <TodoSearch
           searchValue={searchValue}
           setSearchValue={setSearchValue}
         />
       </TodoHeader>
-      
-      <TodoList>
-        {error && <TodosError error={error} />}
-        {loading && <TodosLoading />}
-        {(!loading && !searchedTodos.length) && <EmptyTodos />}
-        {searchedTodos.map(todo => (
+
+      <TodoList
+        error={error}
+        loading={loading}
+        totalTodos={totalTodos}
+        searchedTodos={searchedTodos}
+        searchText={searchValue}
+        onError={() => <TodosError />}
+        onLoading={() => <TodosLoading />}
+        onEmptyTodos={() => <EmptyTodos />}
+        onEmptySearchResults={
+          (searchText) => <p>There are no results for {searchText}</p>
+        }
+        render={todo => (
           <TodoItem
             key={todo.text}
             text={todo.text}
@@ -53,7 +63,17 @@ function App() {
             onComplete={() => completeTodo(todo.text)}
             onDelete={() => deleteTodo(todo.text)}
           />
-        ))}
+        )}
+      >
+        {todo => (
+          <TodoItem
+            key={todo.text}
+            text={todo.text}
+            completed={todo.completed}
+            onComplete={() => completeTodo(todo.text)}
+            onDelete={() => deleteTodo(todo.text)}
+          />
+        )}
       </TodoList>
 
       {!!openModal && (
@@ -67,6 +87,10 @@ function App() {
 
       <CreateTodoButton
         setOpenModal={setOpenModal}
+      />
+
+      <ChangeAlert
+        synchronize={synchronizeTodos}
       />
     </React.Fragment>
   );
